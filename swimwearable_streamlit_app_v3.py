@@ -660,14 +660,23 @@ def lap_summary(df: pd.DataFrame) -> pd.DataFrame:
     return out.reset_index(drop=True)
 
 
-def download_button_for_clean_data(df: pd.DataFrame):
-    csv = df.to_csv(index=False).encode("utf-8")
+def download_button_for_clean_data(df: pd.DataFrame, key: str):
+    columns_to_export = [c for c in CANONICAL_COLUMNS if c in df.columns]
+    event_columns = [
+        c for c in ["stroke_event", "breath_event", "turn_event", "glide_event"]
+        if c in df.columns and c not in columns_to_export
+    ]
+
+    export_df = df[columns_to_export + event_columns].copy()
+    csv = export_df.to_csv(index=False).encode("utf-8")
+
     st.download_button(
         label="⬇️ Download cleaned CSV",
         data=csv,
         file_name="swimwearable_cleaned_data.csv",
         mime="text/csv",
         use_container_width=True,
+        key=key,
     )
 
 
@@ -993,8 +1002,9 @@ with meta_right:
         file_name="swimwearable_session_report.md",
         mime="text/markdown",
         use_container_width=True,
+        key="download_session_report",
     )
-    download_button_for_clean_data(df)
+    download_button_for_clean_data(df, key="download_clean_data_top")
 
 
 # ============================================================
@@ -1326,4 +1336,4 @@ with tab_raw:
     else:
         st.dataframe(df.head(40), use_container_width=True)
 
-    download_button_for_clean_data(df)
+    download_button_for_clean_data(df, key="download_clean_data_raw_tab")
